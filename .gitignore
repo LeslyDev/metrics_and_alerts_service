@@ -1,0 +1,31 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Go workspace file
+go.work
+
+# Scratch temporary files
+*.tmp
+.answers.json
+
+# Local configuration
+dev/deployments/local.dev.env
+
+# Go test coverage
+coverage.html
+
+# Intellij Idea
+.idea
+
+# tools binary
+dev/tools/bin
