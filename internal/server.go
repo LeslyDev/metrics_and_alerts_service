@@ -17,13 +17,8 @@ func postHandler(writer http.ResponseWriter, request *http.Request) {
 		request.PathValue("metricValue"),
 	)
 	if err != nil {
-		if errors.Is(err, UnknownMetricType) {
-			writer.WriteHeader(http.StatusNotFound)
-			return
-		} else if errors.Is(err, ImpossibleMetricValue) {
-			writer.WriteHeader(http.StatusBadRequest)
-			return
-		}
+		writer.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	writer.WriteHeader(http.StatusOK)
 }
@@ -31,10 +26,10 @@ func postHandler(writer http.ResponseWriter, request *http.Request) {
 func getHandler(writer http.ResponseWriter, request *http.Request) {
 	value, err := storage.Get(request.PathValue("metricType"), request.PathValue("metricName"))
 	if err != nil {
-		if errors.Is(err, UnknownMetricType) {
+		if errors.Is(err, ErrImpossibleMetricTypeOrValue) {
 			writer.WriteHeader(http.StatusNotFound)
 			return
-		} else if errors.Is(err, UnknownMetricName) {
+		} else if errors.Is(err, ErrUnknownMetricName) {
 			writer.WriteHeader(http.StatusBadRequest)
 			return
 		}

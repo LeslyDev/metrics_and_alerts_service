@@ -2,16 +2,14 @@ package internal
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 )
 
 const gauge = "gauge"
 const counter = "counter"
 
-var UnknownMetricType = errors.New("unknown metric type")
-var ImpossibleMetricValue = errors.New("impossible metric value")
-var UnknownMetricName = errors.New("unknown metric name")
+var ErrImpossibleMetricTypeOrValue = errors.New("impossible metric type or value")
+var ErrUnknownMetricName = errors.New("unknown metric name")
 
 type GaugeMetric struct {
 	name  string
@@ -33,7 +31,7 @@ func (storage MemStorage) Add(typ string, name string, value string) error {
 	case gauge:
 		val, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return ImpossibleMetricValue
+			return ErrImpossibleMetricTypeOrValue
 		}
 		storage.gaugeMetrics[name] = GaugeMetric{
 			name:  name,
@@ -44,7 +42,7 @@ func (storage MemStorage) Add(typ string, name string, value string) error {
 	case counter:
 		val, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return ImpossibleMetricValue
+			return ErrImpossibleMetricTypeOrValue
 		}
 		value, status := storage.counterMetrics[name]
 		if status {
@@ -61,7 +59,7 @@ func (storage MemStorage) Add(typ string, name string, value string) error {
 
 		return nil
 	default:
-		return UnknownMetricType
+		return ErrImpossibleMetricTypeOrValue
 	}
 }
 
@@ -69,19 +67,17 @@ func (storage MemStorage) Get(typ string, name string) (string, error) {
 	switch typ {
 	case gauge:
 		value, status := storage.gaugeMetrics[name]
-		fmt.Printf("Да это гуага, имя %s, значение %f", value.name, value.value)
 		if !status {
-			return "", UnknownMetricName
+			return "", ErrUnknownMetricName
 		}
 		return value.name + strconv.FormatFloat(value.value, 'g', 2, 64), nil
 	case counter:
 		value, status := storage.counterMetrics[name]
-		fmt.Printf("Да это counter, имя %s, значение %d", value.name, value.value)
 		if !status {
-			return "", UnknownMetricName
+			return "", ErrUnknownMetricName
 		}
 		return value.name + strconv.Itoa(int(value.value)), nil
 	default:
-		return "", UnknownMetricType
+		return "", ErrImpossibleMetricTypeOrValue
 	}
 }
