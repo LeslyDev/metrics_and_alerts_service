@@ -27,10 +27,10 @@ func getHandler(writer http.ResponseWriter, request *http.Request) {
 	value, err := storage.Get(request.PathValue("metricType"), request.PathValue("metricName"))
 	if err != nil {
 		if errors.Is(err, ErrImpossibleMetricTypeOrValue) {
-			writer.WriteHeader(http.StatusNotFound)
+			writer.WriteHeader(http.StatusBadRequest)
 			return
 		} else if errors.Is(err, ErrUnknownMetricName) {
-			writer.WriteHeader(http.StatusBadRequest)
+			writer.WriteHeader(http.StatusNotFound)
 			return
 		}
 	}
