@@ -2,11 +2,9 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 )
-
-const gauge = "gauge"
-const counter = "counter"
 
 var ErrImpossibleMetricTypeOrValue = errors.New("impossible metric type or value")
 var ErrUnknownMetricName = errors.New("unknown metric name")
@@ -26,9 +24,17 @@ type MemStorage struct {
 	counterMetrics map[string]CounterMetric
 }
 
+func NewMemStorage() *MemStorage {
+	return &MemStorage{
+		gaugeMetrics:   make(map[string]GaugeMetric, 0),
+		counterMetrics: make(map[string]CounterMetric, 0),
+	}
+}
+
 func (storage MemStorage) Add(typ string, name string, value string) error {
+	fmt.Println(value)
 	switch typ {
-	case gauge:
+	case Gauge:
 		val, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return ErrImpossibleMetricTypeOrValue
@@ -39,7 +45,7 @@ func (storage MemStorage) Add(typ string, name string, value string) error {
 		}
 
 		return nil
-	case counter:
+	case Counter:
 		val, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return ErrImpossibleMetricTypeOrValue
@@ -65,13 +71,13 @@ func (storage MemStorage) Add(typ string, name string, value string) error {
 
 func (storage MemStorage) Get(typ string, name string) (string, error) {
 	switch typ {
-	case gauge:
+	case Gauge:
 		value, status := storage.gaugeMetrics[name]
 		if !status {
 			return "", ErrUnknownMetricName
 		}
 		return value.name + strconv.FormatFloat(value.value, 'g', 2, 64), nil
-	case counter:
+	case Counter:
 		value, status := storage.counterMetrics[name]
 		if !status {
 			return "", ErrUnknownMetricName
