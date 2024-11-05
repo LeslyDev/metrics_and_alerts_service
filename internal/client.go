@@ -93,23 +93,42 @@ func (mClient MetricClient) SendMetrics(ctx context.Context, wg *sync.WaitGroup)
 				} else {
 					panic("Unknown metric data type")
 				}
-				mClient.client.Post(
-					buildURL(Gauge, metric, fmt.Sprintf("%f", castedMetricValue)),
+				func() {
+					runtimeMetricsResponse, err := mClient.client.Post(
+						buildURL(Gauge, metric, fmt.Sprintf("%f", castedMetricValue)),
+						"text/plain",
+						nil,
+					)
+					if err != nil {
+						fmt.Println("Error while send runtime metrics")
+						return
+					}
+					defer runtimeMetricsResponse.Body.Close()
+				}()
+			}
+			func() {
+				pollCountMetricResponse, err := mClient.client.Post(
+					buildURL(Counter, "PollCount", strconv.Itoa(*mClient.pollCount)),
 					"text/plain",
 					nil,
 				)
-			}
-			mClient.client.Post(
-				buildURL(Counter, "PollCount", strconv.Itoa(*mClient.pollCount)),
-				"text/plain",
-				nil,
-			)
-			mClient.client.Post(
-				buildURL(Gauge, "RandomValue", fmt.Sprintf("%f", rand.Float64())),
-				"text/plain",
-				nil,
-			)
-			fmt.Println("Successfully send metrics")
+				if err != nil {
+					fmt.Println("Error while send PollCount metric")
+					return
+				}
+				defer pollCountMetricResponse.Body.Close()
+				randomValueMetricResponse, err := mClient.client.Post(
+					buildURL(Gauge, "RandomValue", fmt.Sprintf("%f", rand.Float64())),
+					"text/plain",
+					nil,
+				)
+				if err != nil {
+					fmt.Println("Error while send RandomValue metric")
+					return
+				}
+				defer randomValueMetricResponse.Body.Close()
+				fmt.Println("Successfully send metrics")
+			}()
 		}
 	}
 }
